@@ -1,9 +1,11 @@
 import os
+from dotenv import load_dotenv
 
 basedir = os.path.abspath(os.path.dirname(__file__))
+load_dotenv(os.path.join(basedir, '.env'))
 
 class Config:
-    # Caminho do banco SQLite
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'projeto_diario.db')
+    SECRET_KEY = os.getenv('SECRET_KEY', 'default_secret')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', f'sqlite:///{os.path.join(basedir, "projeto_diario.db")}')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SECRET_KEY = 'minha_chave_secreta'  # Para segurança em sessões, JWT, etc.
+    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'default_jwt_secret')

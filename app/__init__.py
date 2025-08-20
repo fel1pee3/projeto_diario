@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_migrate import Migrate
 from app.extensions import db, jwt
 from app.models.user import User
 
@@ -9,11 +10,14 @@ def create_app():
     db.init_app(app)
     jwt.init_app(app)
 
-    # Criar todas as tabelas
+    # Configurar migrate
+    migrate = Migrate(app, db)
+
+    # Criar todas as tabelas (opcional, você pode usar migrate)
     with app.app_context():
         db.create_all()
 
-    # Registrar blueprints (rotas)
+    # Registrar blueprints
     from app.routes.auth import auth_bp
     app.register_blueprint(auth_bp)
 
