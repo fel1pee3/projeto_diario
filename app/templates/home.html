@@ -19,6 +19,10 @@
                             <h4 class="text-primary">Bem-vindo!</h4>
                             <p class="mb-0">Usuário: <span id="username" class="fw-bold text-primary"></span></p>
                         </div>
+                        <div class="mb-3">
+                            <a href="/notes/list" class="btn btn-primary px-4 me-2">Minhas Anotações</a>
+                            <a href="/notes/create" class="btn btn-success px-4">Nova Anotação</a>
+                        </div>
                         <button id="logoutBtn" class="btn btn-outline-primary px-4">Sair</button>
                     </div>
                 </div>
@@ -28,7 +32,7 @@
 
     <script>
         window.addEventListener('load', function() {
-            const token = localStorage.getItem('jwt_token');
+            const token = localStorage.getItem('access_token');
 
             if (!token) {
                 window.location.href = '/login';
@@ -53,13 +57,13 @@
             })
             .catch(error => {
                 console.error('Erro:', error);
-                localStorage.removeItem('jwt_token');
+                localStorage.removeItem('access_token');
                 window.location.href = '/login';
             });
         });
 
         document.getElementById('logoutBtn').addEventListener('click', function() {
-            localStorage.removeItem('jwt_token');
+            localStorage.removeItem('access_token');
             window.location.href = '/login';
         });
     </script>

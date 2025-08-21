@@ -2,7 +2,9 @@ from flask import Flask, render_template, redirect, url_for, request, jsonify
 from flask_migrate import Migrate
 from app.extensions import db, jwt
 from app.models.user import User
+from app.models.note import Note
 from app.routes.auth import auth_bp
+from app.routes.notes import notes_bp
 
 def create_app():
     app = Flask(__name__)
@@ -20,6 +22,7 @@ def create_app():
 
     # Registrar blueprints
     app.register_blueprint(auth_bp)
+    app.register_blueprint(notes_bp)
 
     # Rota principal - redireciona conforme autenticação
     @app.route('/')

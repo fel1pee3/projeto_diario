@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizar Anotação</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            margin-bottom: 30px;
+        }
+        .note-container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .note-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .note-content {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+        }
+        .note-meta {
+            font-size: 14px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+        }
+        .btn {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .actions {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Visualizar Anotação</h1>
+    </div>
+
+    <div id="note-container" class="note-container">
+        <!-- A anotação será carregada aqui via JavaScript -->
+    </div>
+
+    <div class="actions">
+        <a href="/notes/list" class="btn btn-secondary">Voltar à Lista</a>
+        <a href="#" id="edit-link" class="btn">Editar</a>
+        <button onclick="deleteNote()" class="btn btn-danger">Deletar</button>
+    </div>
+
+    <script>
+        // Verificar se há token de autenticação
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            window.location.href = '/login';
+        }
+
+        // Obter ID da anotação da URL
+        const noteId = window.location.pathname.split('/').pop();
+
+        // Carregar anotação
+        async function loadNote() {
+            try {
+                const response = await fetch(`/notes/${noteId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.status === 401) {
+                    localStorage.removeItem('access_token');
+                    window.location.href = '/login';
+                    return;
+                }
+
+                if (response.status === 404) {
+                    alert('Anotação não encontrada');
+                    window.location.href = '/notes/list';
+                    return;
+                }
+
+                const data = await response.json();
+                const note = data.note;
+                const container = document.getElementById('note-container');
+
+                container.innerHTML = `
+                    <div class="note-title">${note.title}</div>
+                    <div class="note-content">${note.content}</div>
+                    <div class="note-meta">
+                        <p><strong>Criada em:</strong> ${new Date(note.created_at).toLocaleString('pt-BR')}</p>
+                        <p><strong>Última atualização:</strong> ${new Date(note.updated_at).toLocaleString('pt-BR')}</p>
+                    </div>
+                `;
+
+                // Configurar link de edição
+                document.getElementById('edit-link').href = `/notes/edit/${note.id}`;
+            } catch (error) {
+                console.error('Erro ao carregar anotação:', error);
+                alert('Erro ao carregar anotação');
+            }
+        }
+
+        // Deletar anotação
+        async function deleteNote() {
+            if (!confirm('Tem certeza que deseja deletar esta anotação?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/notes/${noteId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    alert('Anotação deletada com sucesso!');
+                    window.location.href = '/notes/list';
+                } else {
+                    const data = await response.json();
+                    alert(data.msg || 'Erro ao deletar anotação');
+                }
+            } catch (error) {
+                console.error('Erro ao deletar anotação:', error);
+                alert('Erro ao deletar anotação');
+            }
+        }
+
+        // Carregar anotação quando a página carregar
+        loadNote();
+    </script>
+</body>
+</html>
