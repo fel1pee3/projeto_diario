@@ -112,6 +112,15 @@ http://127.0.0.1:5000/
 
 ---
 
+## Pré-visualização
+Prévia da aplicação:
+
+![Imagem da Aplicação](app/static/imagensProjeto/tela-login.png)
+![Imagem da Aplicação](app/static/imagensProjeto/tela-registro.png)
+![Imagem da Aplicação](app/static/imagensProjeto/tela-home.png)
+
+---
+
 ## 📄 Licença
 
 MIT License - Sinta-se livre para usar e modificar este projeto.
