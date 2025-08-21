@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minhas Anotações</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .btn {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .note-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+        .note-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .note-content {
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .note-date {
+            font-size: 12px;
+            color: #999;
+        }
+        .note-actions {
+            margin-top: 10px;
+        }
+        .note-actions a {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Minhas Anotações</h1>
+        <a href="/notes/create" class="btn">Nova Anotação</a>
+    </div>
+
+    <div id="notes-container">
+        <!-- As anotações serão carregadas aqui via JavaScript -->
+    </div>
+
+    <script>
+        // Verificar se há token de autenticação
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            window.location.href = '/login';
+        }
+
+        // Carregar anotações
+        async function loadNotes() {
+            try {
+                const response = await fetch('/notes/', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.status === 401) {
+                    localStorage.removeItem('access_token');
+                    window.location.href = '/login';
+                    return;
+                }
+
+                const data = await response.json();
+                const container = document.getElementById('notes-container');
+
+                if (data.notes.length === 0) {
+                    container.innerHTML = '<p>Nenhuma anotação encontrada. <a href="/notes/create">Criar primeira anotação</a></p>';
+                    return;
+                }
+
+                container.innerHTML = data.notes.map(note => `
+                    <div class="note-card">
+                        <div class="note-title">${note.title}</div>
+                        <div class="note-content">${note.content}</div>
+                        <div class="note-date">Criada em: ${new Date(note.created_at).toLocaleString('pt-BR')}</div>
+                        <div class="note-actions">
+                            <a href="/notes/view/${note.id}" class="btn">Ver</a>
+                            <a href="/notes/edit/${note.id}" class="btn">Editar</a>
+                            <button onclick="deleteNote(${note.id})" class="btn btn-danger">Deletar</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Erro ao carregar anotações:', error);
+                alert('Erro ao carregar anotações');
+            }
+        }
+
+        // Deletar anotação
+        async function deleteNote(noteId) {
+            if (!confirm('Tem certeza que deseja deletar esta anotação?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/notes/${noteId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    alert('Anotação deletada com sucesso!');
+                    loadNotes();
+                } else {
+                    const data = await response.json();
+                    alert(data.msg || 'Erro ao deletar anotação');
+                }
+            } catch (error) {
+                console.error('Erro ao deletar anotação:', error);
+                alert('Erro ao deletar anotação');
+            }
+        }
+
+        // Carregar anotações quando a página carregar
+        loadNotes();
+    </script>
+</body>
+</html>
