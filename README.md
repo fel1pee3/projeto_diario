@@ -118,6 +118,8 @@ Prévia da aplicação:
 ![Imagem da Aplicação](app/static/imagensProjeto/tela-login.png)
 ![Imagem da Aplicação](app/static/imagensProjeto/tela-registro.png)
 ![Imagem da Aplicação](app/static/imagensProjeto/tela-home.png)
+![Imagem da Aplicação](app/static/imagensProjeto/tela-lista.png)
+![Imagem da Aplicação](app/static/imagensProjeto/tela-criar.png)
 
 ---
 
