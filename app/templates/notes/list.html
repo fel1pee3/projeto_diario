@@ -62,6 +62,25 @@
         <a href="/notes/create" class="btn">Nova Anotação</a>
     </div>
 
+    
+
+    <form id="filter-form" onsubmit="applyFilters(event)" style="margin-bottom: 20px;">
+    <input type="text" id="searchInput" placeholder="Buscar por título ou conteúdo" />
+    
+    <select id="orderSelect">
+        <option value="desc">Mais recentes</option>
+        <option value="asc">Mais antigas</option>
+    </select>
+
+    <label>
+        <input type="checkbox" id="favoritesOnly" />
+        Mostrar apenas favoritos
+    </label>
+
+    <button type="submit" class="btn">Aplicar Filtros</button>
+</form>
+
+
     <div id="notes-container">
         <!-- As anotações serão carregadas aqui via JavaScript -->
     </div>
@@ -74,9 +93,15 @@
         }
 
         // Carregar anotações
-        async function loadNotes() {
+        async function loadNotes(search = '', order = 'desc', favoritesOnly = false) {
             try {
-                const response = await fetch('/notes/', {
+
+                const params = new URLSearchParams();
+                if (search) params.append('q', search);
+                params.append('order', order);
+                if (favoritesOnly) params.append('favorites', '1');
+
+                const response = await fetch('/notes/?' + params.toString(), {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -105,6 +130,9 @@
                             <a href="/notes/view/${note.id}" class="btn">Ver</a>
                             <a href="/notes/edit/${note.id}" class="btn">Editar</a>
                             <button onclick="deleteNote(${note.id})" class="btn btn-danger">Deletar</button>
+                            <button onclick="toggleFavorite(${note.id}, this)" class="btn">
+                            ${note.is_favorite ? '⭐' : '☆'}
+                            </button>
                         </div>
                     </div>
                 `).join('');
@@ -113,6 +141,43 @@
                 alert('Erro ao carregar anotações');
             }
         }
+
+        // Função chamada no submit do formulário para aplicar filtros  
+        function applyFilters(event) {
+        event.preventDefault(); // evitar recarregar a página
+
+        const search = document.getElementById('searchInput').value.trim();
+        const order = document.getElementById('orderSelect').value;
+        const favoritesOnly = document.getElementById('favoritesOnly').checked;
+
+        loadNotes(search, order, favoritesOnly);
+        }
+
+        // Função para favoritar/desfavoritar nota
+        async function toggleFavorite(noteId, buttonElement) {
+        try {
+        const response = await fetch(`/notes/${noteId}/favorite`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            // Atualizar ícone do botão conforme estado favorito
+            buttonElement.textContent = data.favorite ? '⭐' : '☆';
+        } else {
+            const data = await response.json();
+            alert(data.msg || 'Erro ao atualizar favorito');
+        }
+        } catch (error) {
+        console.error('Erro ao atualizar favorito:', error);
+        alert('Erro ao atualizar favorito');
+        }
+    }
+
+
 
         // Deletar anotação
         async function deleteNote(noteId) {

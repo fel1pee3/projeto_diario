@@ -9,6 +9,7 @@ notes_bp = Blueprint('notes', __name__, url_prefix='/notes')
 # Rotas para renderizar templates HTML
 @notes_bp.route('/list')
 def list_notes_page():
+
     return render_template('notes/list.html')
 
 @notes_bp.route('/create')
@@ -62,9 +63,36 @@ def create_note():
 def list_notes():
     current_user = get_jwt_identity()
     user = User.query.filter_by(username=current_user).first()
+
+    # Novos filtros  # Pega os parâmetros da URL
+    search = request.args.get('q', '', type=str)
+    order = request.args.get('order', 'desc', type=str)  # asc ou desc
+    favorites_only = request.args.get('favorites', '', type=str) == '1'
+
+    query = Note.query.filter_by(user_id=user.id)
+
+    #  Filtro por busca
+
+    if search:
+        query = query.filter(
+            (Note.title.ilike(f'%{search}%')) |
+            (Note.content.ilike(f'%{search}%'))
+        )
+
+    #  Filtro por favoritos
+
+    if favorites_only:
+        query = query.filter_by(is_favorite=True)
+
+     #  Ordenação
+
+    if order == 'asc':
+        query = query.order_by(Note.created_at.asc())
+    else:
+        query = query.order_by(Note.created_at.desc())
     
-    anotacoes = Note.query.filter_by(user_id=user.id).order_by(Note.created_at.desc()).all()
-    
+    anotacoes = query.all()
+
     notes_list = []
     for anotacao in anotacoes:
         notes_list.append({
@@ -72,7 +100,8 @@ def list_notes():
             'title': anotacao.title,
             'content': anotacao.content[:100] + '...' if len(anotacao.content) > 100 else anotacao.content,
             'created_at': anotacao.created_at.isoformat(),
-            'updated_at': anotacao.updated_at.isoformat()
+            'updated_at': anotacao.updated_at.isoformat(),
+            'is_favorite': anotacao.is_favorite
         })
     
     return jsonify({'notes': notes_list}), 200
@@ -149,3 +178,22 @@ def delete_note(note_id):
     db.session.commit()
     
     return jsonify({'msg': 'Anotação deletada com sucesso!'}), 200
+
+# Rota para favoritar/desfavoritar
+
+@notes_bp.route('/<int:note_id>/favorite', methods=['PATCH'])
+@jwt_required()
+def toggle_favorite(note_id):
+    current_user = get_jwt_identity()
+    user = User.query.filter_by(username=current_user).first()
+
+    anotacao = Note.query.filter_by(id=note_id, user_id=user.id).first()
+    
+    if not anotacao:
+        return jsonify({'msg': 'Anotação não encontrada'}), 404
+
+    anotacao.is_favorite = not anotacao.is_favorite
+    db.session.commit()
+
+    return jsonify({'msg': 'Favorito atualizado', 'favorite': anotacao.is_favorite}), 200
+
