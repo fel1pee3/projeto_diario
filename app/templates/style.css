@@ -1,0 +1,17 @@
+.card {
+    border-radius: 15px;
+}
+
+body {
+    background: linear-gradient(135deg, #ef2fd, #bbdefb);
+}
+
+/* Botão de login */
+.btn-primary {
+    background-color: #0066cc;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #004999;
+}
